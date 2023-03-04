@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <metaSnippet th:replace="snippets.html :: metaSnippet"></metaSnippet>
+    <title>socialcircle</title>
+
+    <style>
+        #main {
+            padding:0px;
+            margin:0px;
+        }
+
+        * {
+            color:white;
+        }
+
+        body {
+            background-color:black;
+        }
+
+        #mob1 {
+            width: 55%
+        }
+
+        #mob2 {
+            width: 40%
+        }
+
+        .out-row {
+            width:70%
+        }
+
+        @media (max-width: 1000px) {
+
+            #mob1 {
+                width: 95%;
+            }
+
+            #mob2 {
+                width: 95%;
+            }
+
+            .out-row {
+                width:100%
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="loading" id="load-screen">Loading&#8230;</div>
+
+<main id="main" class="main" style="margin:auto">
+    <div style="padding:10px">
+        <center>
+            <img th:src="@{/static/img/logo.png}" alt="" style="height:50px">
+            <span class="d-none d-lg-block" style="font-size:1.4em; font-weight:bold">socialcircle</span>
+        </center>
+    </div>
+
+    <div class="row out-row" style="margin:auto; height:95vh; position:relative; text-align:center; color:white">
+
+        <div style="background-color:#7763f4; border-radius:20px; margin:10px;" id="mob1">
+            <div style="height:70px; line-height:70px; margin:auto; font-weight:bold; text-align:center">
+                <span style="display: inline-block; vertical-align: middle; line-height: normal; font-size:2em">
+                    Login to socialcircle
+                </span>
+            </div>
+            <div style="height:550px; line-height:500px; margin:auto; font-weight:bold; text-align:center; padding-left:50px; padding-right:50px">
+                <div style="display: inline-block; vertical-align: middle; line-height: normal; margin:20px">
+                    <div>
+                        <img th:src="@{/static/img/frontimg.png}" style="width:100%">
+                    </div>
+                    <div style="font-weight:100; text-align:left; margin-top:20px">
+                        <div style="font-weight:bold">Login to access all features</div>
+                        <div class="row" style="margin-top:10px;">
+                            <div class="col-md-6">
+                                <ul>
+                                    <li>Add contacts</li>
+                                    <li>Track connects</li>
+                                    <li>Get recommendations</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul>
+                                    <li>Get reminded about contacts</li>
+                                    <li>Match with interesting people</li>
+                                    <li>And much more</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin:auto; padding-left:50px; padding-right:50px; margin-bottom:20px">
+                <center>
+                    <button type="button" onclick="location.href='/socialcircle/login'" class="btn btn-dark rounded-pill"
+                            style="width:100%; height:60px; margin:auto; background-color:black">
+                    <span style="font-size:1.1em">
+                        Login to socialcircle
+                    </span>
+                    </button>
+                </center>
+            </div>
+        </div>
+        <div style="background-color:#52a35c; border-radius:20px; margin:10px" id="mob2">
+            <div style="height:70px; line-height:70px; margin:auto; font-weight:bold; text-align:center">
+                <span style="display: inline-block; vertical-align: middle; line-height: normal;">
+                    Start Socializing
+                </span>
+            </div>
+            <div style="height:550px; line-height:500px; margin:auto; font-weight:bold; text-align:center; padding-left:50px; padding-right:50px">
+                <span style="display: inline-block; vertical-align: middle; line-height: normal; font-size:2.4em">
+                    Get reminders to stay connected with your friends and suggestions to expand your circle
+                </span>
+            </div>
+            <div style="margin:auto; padding-left:50px; padding-right:50px; margin-bottom:20px">
+                <center>
+                    <button type="button" onclick="location.href='/socialcircle/browse'" class="btn btn-dark rounded-pill"
+                            style="width:100%; height:60px; margin:auto; background-color:black">
+                    <span style="font-size:1.1em">
+                        Browse People
+                    </span>
+                    </button>
+                </center>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+<a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+        class="bi bi-arrow-up-short"></i></a>
+
+<!-- Vendor JS Files -->
+<script th:src="@{/static/js/jquery-2.0.0.min.js}"></script>
+<script th:src="@{/static/vendor/apexcharts/apexcharts.min.js}"></script>
+<script th:src="@{/static/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/static/vendor/chart.js/chart.min.js}"></script>
+<script th:src="@{/static/vendor/echarts/echarts.min.js}"></script>
+<script th:src="@{/static/vendor/quill/quill.min.js}"></script>
+<script th:src="@{/static/vendor/simple-datatables/simple-datatables.js}"></script>
+<script th:src="@{/static/vendor/tinymce/tinymce.min.js}"></script>
+<script th:src="@{/static/vendor/php-email-form/validate.js}"></script>
+<script th:src="@{/static/js/main.js}"></script>
+<script th:src="@{/static/js/index.js}"></script>
+
+</body>
+
+</html>

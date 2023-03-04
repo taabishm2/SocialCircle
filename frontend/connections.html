@@ -4,11 +4,9 @@
 		<meta charset="utf-8" />
 		<meta content="width=device-width, initial-scale=1.0" name="viewport" />
 
-		<title>Index</title>
+		<title>Add Connection</title>
 		<meta content="" name="description" />
 		<meta content="" name="keywords" />
-        <meta http-equiv="Refresh" content="0; url='./connections.html'" />
-
 
 		<!-- Favicons -->
 		<link href="assets/img/favicon.png" rel="icon" />
@@ -126,7 +124,7 @@
 					<div class="container-fluid">
 						<ul class="nav navbar-nav d-flex flex-row justify-content-around w-100">
 							<li class="active w-50 d-flex justify-content-center">
-                                <a href="./connections.html" class="w-50 d-flex justify-content-center">Add Connections</a>
+                                <a href="#" class="w-50 d-flex justify-content-center">Add Connections</a>
                             </li>
 							<li class="w-50 d-flex justify-content-center">
                                 <a href="./connects.html" class="w-50 d-flex justify-content-center">Add Connects</a>
@@ -140,7 +138,132 @@
 
 		<!-- Main Body -->
 		<main id="main" class="m-0 p-5 d-flex align-items-center flex-column">
-			<h1>Index</h1>
+			<!-- Page Title -->
+			<div class="pagetitle">
+				<h1>Connections</h1>
+			</div>
+			<!-- End Page Title -->
+
+			<div class="search-bar m-3 w-50">
+				<form class="search-form d-flex align-items-center" method="POST" action="#">
+					<input type="text" name="query" placeholder="Search" title="Enter search keyword" />
+					<button type="submit" title="Search"><i class="bi bi-search"></i></button>
+				</form>
+			</div>
+
+			<section class="section w-75">
+				<div class="card">
+					<div class="card-body p-5 pb-1 pt-1">
+						<h5 class="card-title">TODO Name</h5>
+						<hr class="mt-0 mb-0" />
+						<div class="row">
+							<div class="col p-2">
+								<p class="m-1">TODO Email</p>
+								<p class="m-1">TODO Location</p>
+							</div>
+							<div class="col d-flex justify-content-center align-items-center p-2">
+								<button
+									type="button"
+									class="btn btn-outline-dark h-75"
+									data-bs-toggle="modal"
+									data-bs-target="#verticalycentered"
+								>
+									Add Connection
+								</button>
+								<div class="modal fade" id="verticalycentered" tabindex="-1">
+									<div class="modal-dialog modal-dialog-centered">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title">Add Connection</h5>
+												<button
+													type="button"
+													class="btn-close"
+													data-bs-dismiss="modal"
+													aria-label="Close"
+												></button>
+											</div>
+											<div class="modal-body">
+												<form class="row g-3">
+													<div class="row-md-4">
+														<label for="connection-form-known" class="form-label"
+															>Already Known</label
+														>
+														<input type="checkbox" id="connection-form-known" />
+													</div>
+													<div class="row-md-4">
+														<label for="connection-form-start" class="form-label"
+															>Current Connection:</label
+														>
+                                                        <br/>
+                                                        <label for="connection-form-start" class="form-label d-inline-block"
+															>I see them every </label
+														>
+														<input
+															type="number"
+															class="form-control w-25 d-inline-block"
+															id="connection-form-start"
+															value="1"
+															required
+                                                            min="0"
+														/>
+                                                        <label for="connection-form-start" class="form-label d-inline-block"
+															>days</label
+														>
+													</div>
+													<div class="row-md-4">
+														<label for="connection-form-stop" class="form-label"
+															>Desired Connection: </label
+														>
+                                                        <br/>
+                                                        <label for="connection-form-stop" class="form-label d-inline-block"
+															>I want to see them every </label
+														>
+														<input
+															type="number"
+															class="form-control w-25 d-inline-block"
+															id="connection-form-stop"
+															value="10"
+															required
+                                                            min="0"
+														/>
+                                                        <label for="connection-form-stop" class="form-label d-inline-block"
+															>days</label
+														>
+													</div>
+													<div class="row-md-4">
+														<label for="connection-form-time" class="form-label"
+															>Timeframe: </label
+														>
+														<input
+															type="number"
+															class="form-control"
+															id="connection-form-time"
+															value="100"
+															required
+                                                            min="0"
+														/>
+													</div>
+													<div class="col-12">
+														<button
+                                                            id="connection-form-submit"
+															class="btn btn-outline-dark"
+															type="submit"
+															data-bs-dismiss="modal"
+														>
+															Submit
+														</button>
+													</div>
+												</form>
+											</div>
+											<!-- TODO Button action -->
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
 		</main>
 		<!-- End Main Body -->
 

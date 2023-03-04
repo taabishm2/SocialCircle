@@ -1,25 +1,36 @@
 import numpy as np
 from matching_model import MatchingModel
 import torch
+import pandas as pd
 
 class Simulation:
 
-    def __init__(self, num_users, num_attributes, num_personalies, num_user_tags):
-        self.num_users = num_users
-        self.num_attributes = num_attributes
-        self.num_personalities = num_personalies
-        self.num_user_tags = num_user_tags
+    def __init__(self, user_csv):
+        # num_users, num_attributes, num_personalies, num_user_tags, 
+        self.user_table = pd.read_csv(user_csv)
+        print()
 
-        self.graph_mat = np.zeros((num_users, num_users))
+        self.user_colname = 'user_idx'
+        self.at_colnames = [c for c in self.user_table.columns if 'a' in c]
+        self.pref_colnames = [c for c in self.user_table.columns if 'p' in c]
+
+        self.at_mat = self.user_table[self.at_colnames].to_numpy()
+        self.pref_mat = self.user_table[self.pref_colnames].to_numpy()
+
+        self.num_users = len(self.user_table)
+        self.num_attributes = np.amax(self.at_mat)
+        self.num_user_tags = len(self.at_colnames)
+
+        self.graph_mat = np.zeros((self.num_users, self.num_users))
         self.matcher = MatchingModel()
 
         self.time = 0
 
-        self.last_req_time = np.zeros(num_users)
+        self.last_req_time = np.zeros(self.num_users)
         self.max_req_prob = 0.8
         self.req_prob_stretch = 20
 
-        self.user_table = np.zeros((num_users, num_user_tags + num_attributes))
+        self.timestep()
 
     
 
@@ -36,9 +47,8 @@ class Simulation:
         user_idxs = self.get_match_requests()
 
         # for each of these users, generate a predicted match ranking
-        self.get_match_ranking(user_idxs)    
-
-
+        preds = self.get_match_ranking(user_idxs)
+        print(preds)
 
         # for each of these users (again), pick the match with the highest combined score
         # (min or product between the two user's scores) and generate the interaction timeseries
@@ -59,15 +69,18 @@ class Simulation:
 
 
 
-    def cartprod_concat(rows1, rows2):
+    def cartprod_concat(to_match, all_users):
         # returns cartesian product of the rows in rows1 and rows2
 
-        cartprod = np.zeros((len(rows1) * len(rows2), rows1.shape[1] + rows2.shape[1]))
+        cartprod = np.zeros((len(to_match) * len(all_users), to_match.shape[1] + all_users.shape[1]))
         idx = 0
-        for i in range(len(rows1)):
-            for j in range(len(rows2)):
-                cartprod[idx] = np.concatenate([rows1[i], rows2[j]])
+        for i in range(len(to_match)):
+            for j in range(len(all_users)):
+                cartprod[idx] = np.concatenate([to_match[i], all_users[j]])
+                idx += 1
+        
         return cartprod
+
 
     def get_match_ranking(self, user_idxs):
         # returns a match for the user given by user_idx
@@ -75,16 +88,18 @@ class Simulation:
         to_match = self.user_table[user_idxs]
         all_users = self.user_table[:, :self.num_user_tags]
 
-        all_pairs = cartprod_concat(to_match, all_users)
+        all_pairs = self.cartprod_concat(to_match, all_users)
         pair_tensor = torch.tensor(all_pairs)
-
         
-        preds = self.matcher(pair_tensor)
-        return preds
+        preds = self.matcher(pair_tensor).numpy()
+        sort_perm = np.argsort(preds)
+
+
+        return preds[sort_perm]
 
 
 
 
     
-
+s = Simulation('users.csv')
 

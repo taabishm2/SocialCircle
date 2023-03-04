@@ -1,27 +1,14 @@
 import numpy as np
 import pandas as pd
-from binarytree import build
 import random
 
-
-random.seed(1)
-class user():
-    def __init__(self, P, attributes):
-        self.tree = tree(P)
-        self.attributes = attributes
-    
-class tree():
-    def __init__(self, P):
-        self.P = P
-        self.root = self.createTree(P, 10)
-        
-    
-    def createTree(self, P, size):
-        values = random.sample(range(size), size)
-        root = build(values)
-        print(root)
-        return root
-    
-    def attributeScore(self, attributes):
-        pass
-
+def create_csv(num_user, num_att, num_per, num_tag, max_att, max_err):
+    data = np.zeros((num_user, 1 + num_tag + num_att))
+    data.T[0] = np.random.randint(low = 0, high = num_per, size=num_user)
+    prefs = {i: np.random.RandomState(i).uniform(-max_att,max_att, num_att) for i in range(num_per)}
+    for col in data:
+        col[1:num_tag+1] = np.random.randint(low=0, high=1+num_att, size=num_tag)
+        error = np.random.uniform(-max_err,max_err, num_att)
+        col[num_tag+1:num_tag+num_att+1] = np.around(error + prefs[int(col[0])], 3)
+    df = pd.DataFrame(data)
+    df.to_csv('users.csv')

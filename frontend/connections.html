@@ -31,6 +31,12 @@
 		<!-- Template Main CSS File -->
 		<link href="assets/css/style.css" rel="stylesheet" />
 
+        <!-- JQuery -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+
+        <!-- Our Scripts -->
+        <script src="./js/formHandler.js"></script>
+
 		<!-- =======================================================
         * Template Name: NiceAdmin - v2.5.0
         * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
@@ -102,7 +108,7 @@
 								</li>
 
 								<li>
-									<a class="dropdown-item d-flex align-items-center" href="#">
+									<a class="dropdown-item d-flex align-items-center" href="./login.html">
 										<i class="bi bi-box-arrow-right"></i>
 										<!-- TODO js -->
 										<span>Logout</span>
@@ -183,12 +189,12 @@
 												></button>
 											</div>
 											<div class="modal-body">
-												<form class="row g-3">
+												<form class="row g-3" id="connection-form" onsubmit="doStuff()">
 													<div class="row-md-4">
 														<label for="connection-form-known" class="form-label"
 															>Already Known</label
 														>
-														<input type="checkbox" id="connection-form-known" />
+														<input type="checkbox" id="connection-form-known" name="connection-form-known"/>
 													</div>
 													<div class="row-md-4">
 														<label for="connection-form-start" class="form-label"
@@ -202,6 +208,7 @@
 															type="number"
 															class="form-control w-25 d-inline-block"
 															id="connection-form-start"
+                                                            name="connection-form-start"
 															value="1"
 															required
                                                             min="0"
@@ -222,6 +229,7 @@
 															type="number"
 															class="form-control w-25 d-inline-block"
 															id="connection-form-stop"
+                                                            name="connection-form-stop"
 															value="10"
 															required
                                                             min="0"
@@ -238,6 +246,7 @@
 															type="number"
 															class="form-control"
 															id="connection-form-time"
+                                                            name="connection-form-time"
 															value="100"
 															required
                                                             min="0"
@@ -245,7 +254,7 @@
 													</div>
 													<div class="col-12">
 														<button
-                                                            id="connection-form-submit"
+                                                            id="connection-form-btn"
 															class="btn btn-outline-dark"
 															type="submit"
 															data-bs-dismiss="modal"

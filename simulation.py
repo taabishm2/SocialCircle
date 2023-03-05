@@ -4,7 +4,7 @@ import torch
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
-from graph import plot_graph
+# from graph import plot_graph
 
 class Simulation:
 
@@ -35,7 +35,10 @@ class Simulation:
         self.archive_cons = set()
         self.time_to_check = 30
 
-        self.matcher = MatchingModel(self.num_attributes + self.num_personalities)
+        in_dim = self.num_attributes + self.num_personalities
+        out_dims = [in_dim // 2, in_dim // 2]
+        self.matcher = MatchingModel(in_dim, out_dims)
+        # exit()
         self.lr = 0.01
         self.optimizer = torch.optim.Adam(self.matcher.parameters(), lr=self.lr)
 
@@ -45,11 +48,16 @@ class Simulation:
         self.max_req_prob = 0.3
         self.req_prob_stretch = 500
 
-        max_timesteps = 500
+        self.tmp_loss_list = []
+
+        max_timesteps = 100
         for i in range(max_timesteps):
             print('timestep', i)
+            print(self.num_users)
             self.timestep()
 
+        plt.plot(np.arange(len(self.tmp_loss_list)), self.tmp_loss_list)
+        plt.savefig('loss.png')
 
     
     # thing that stores time, x, and y
@@ -126,6 +134,10 @@ class Simulation:
 
             del self.con_to_start[user_tuple]
             del self.con_to_start[user_tuple_r]
+
+            del self.con_to_score[user_tuple]
+            del self.con_to_score[user_tuple_r]
+
         except KeyError as e: 
             pass
          
@@ -160,8 +172,8 @@ class Simulation:
         # and backprop through the matcher model
         self.update_current_connections()
 
-        if len(self.con_to_score) > 0:
-            plot_graph(self.con_to_score, len(self.con_to_score))
+        # if len(self.con_to_score) > 0:
+        #     plot_graph(self.con_to_score, self.num_users, f'fig/{self.time}.png')
             
         self.time += 1
 
@@ -207,20 +219,21 @@ class Simulation:
 
             interactions = torch.tensor(interactions, dtype=torch.float32)
             # print(torch.mean(interactions, dim=-1))
-            time.sleep(0.25)
+            # time.sleep(0.25)
             # print('interactions shape', interactions.shape)
             # print(grad_pred)
             # print(interactions)
             loss = torch.mean((grad_pred - torch.mean(interactions)) ** 2)
             print(loss)
+            self.tmp_loss_list.append(loss.item())
             loss.backward()
+            self.optimizer.step()
+
+            # print(self.matcher.layers._modules['0'].weight)
+            
 
             for user1, user2 in users_to_archive:
                 self.archive_connection(user1, user2)
-
-
-
-
 
 
     def get_match_requests(self):
@@ -253,15 +266,22 @@ class Simulation:
         
         return cartprod
 
+    def cartprod(self, to_match, all_users):
+        t1 = np.zeros((len(to_match) * len(all_users), to_match.shape[1]))
+        t2 = np.zeros((len(to_match) * len(all_users), all_users.shape[1]))
+        idx = 0
+        for i in range(len(to_match)):
+            for j in range(len(all_users)):
+                t1[idx] = to_match[i]
+                t2[idx] = all_users[j]
+                idx += 1
+        
+        return t1, t2
 
     def predict_match_with_grad(self, user1_list, user2_list):
-        pair_tensor = torch.tensor(
-            np.concatenate([self.bin_tag_mat[user1_list], self.bin_tag_mat[user2_list]], axis=-1),
-            dtype=torch.float32
-        )
-        print('grad predict input shape', pair_tensor.shape)
-        pair_tensor = torch.unsqueeze(pair_tensor, dim=0)
-        pred = self.matcher(pair_tensor)
+        t1 = torch.tensor(self.bin_tag_mat[user1_list], dtype=torch.float32)
+        t2 = torch.tensor(self.bin_tag_mat[user2_list], dtype=torch.float32)
+        pred = self.matcher(t1, t2)
         return pred
 
 
@@ -271,11 +291,14 @@ class Simulation:
         
         with torch.no_grad():
             to_match = self.bin_tag_mat[user_idxs]
-            all_pairs = self.cartprod_concat(to_match, self.bin_tag_mat)
-            
-            pair_tensor = torch.tensor(all_pairs, dtype=torch.float32)
+            t1, t2 = self.cartprod(to_match, self.bin_tag_mat)
+            t1 = torch.tensor(t1, dtype=torch.float32)
+            t2 = torch.tensor(t2, dtype=torch.float32)
+
+            # pair_tensor = torch.tensor(all_pairs, dtype=torch.float32)
             # print('pair_tensor shape', pair_tensor.shape)
-            preds = self.matcher(pair_tensor)
+            preds = self.matcher(t1, t2)
+            # print('new network output shape', preds.shape)
             preds = torch.squeeze(preds, dim=-1).detach().numpy()
             
         

@@ -48,6 +48,9 @@ public class User extends AbstractEntity {
     @Column
     private String attribute5;
 
+    @Column
+    private Integer personalityType;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRole userRole = UserRole.ADMIN;

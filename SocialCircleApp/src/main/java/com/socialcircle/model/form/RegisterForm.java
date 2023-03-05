@@ -23,6 +23,8 @@ public class RegisterForm {
     private String city;
     private Long phone;
 
+    private Integer personalityType;
+
     private String attribute1;
     private String attribute2;
     private String attribute3;

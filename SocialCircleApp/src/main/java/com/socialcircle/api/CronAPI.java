@@ -1,15 +1,14 @@
 package com.socialcircle.api;
 
 import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.socialcircle.config.security.SecurityUtil;
 import com.socialcircle.dao.ConnectDao;
 import com.socialcircle.dao.ContactDao;
 import com.socialcircle.dao.UserDao;
 import com.socialcircle.entity.Connect;
 import com.socialcircle.entity.Contact;
-import com.socialcircle.model.form.ConnectForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -27,6 +26,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.json.JSONObject;
+
 @Service
 public class CronAPI {
     @Autowired
@@ -38,7 +39,7 @@ public class CronAPI {
     @Autowired
     private ContactDao contactDao;
 
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelay = 1000 * 60 * 60 * 24)
     @Transactional(rollbackOn = ApiException.class)
     public void generateSuggestions() throws UnirestException {
         List<Contact> contacts = contactDao.selectAll();
@@ -59,29 +60,37 @@ public class CronAPI {
                 }
 
                 Connect pendingConnect = getPendingConnect(userId, otherUserId);
+
+                List<Connect> oldConnects = connectDao.getByUsers(userId, otherUserId);
+                String oldNotes = String.join(", ", oldConnects.stream().map(i -> i.getNotes())
+                        .filter(i -> Objects.nonNull(i)).collect(Collectors.toList()));
+
                 if (!Objects.isNull(pendingConnect)) {
                     if (requiresRepeatPing(currentProgress, contact, pendingConnect))
-                        createConnectPing(userId, otherUserId, false, pendingConnect);
+                        createConnectPing(userId, otherUserId, false, pendingConnect, oldNotes);
                 } else {
-                    createConnectPing(userId, otherUserId, true, null);
+                    createConnectPing(userId, otherUserId, true, null, oldNotes);
                 }
             }
         }
     }
 
-    private void createConnectPing(Long userId, Long otherUserId, boolean createConnect, Connect pendingConnect) throws UnirestException {
-        // Add/update connect suggest in DB
+    private void createConnectPing(Long userId, Long otherUserId, boolean createConnect, Connect pendingConnect, String notes) throws UnirestException {
+        String outNotes = "";
         if (!createConnect) {
+            pendingConnect.setNotes(notes);
+            outNotes = notes;
             pendingConnect.setCreatedAt(ZonedDateTime.now());
         } else {
             Connect connect = new Connect();
             connect.setIsSuggestion(true);
             connect.setSourceUserId(Math.min(userId, otherUserId));
             connect.setDestinationUserId(Math.max(userId, otherUserId));
+            outNotes = notes;
             connectDao.persist(connect);
         }
 
-        sendViaGoogleCalendar(userDao.select(userId).getEmail(), userDao.select(otherUserId).getEmail());
+        sendViaGoogleCalendar(userDao.select(userId).getEmail(), userDao.select(otherUserId).getEmail(), outNotes);
         // TODO: Notify via Twilio
     }
 
@@ -92,14 +101,15 @@ public class CronAPI {
         return formattedNow;
     }
 
-    private void sendViaGoogleCalendar(String emailA, String emailB) throws UnirestException {
+    private void sendViaGoogleCalendar(String emailA, String emailB, String previousNotes) throws UnirestException {
+        String gptResponse = getGptResponse(previousNotes);
         String calendarBody = "{" +
                 "\"summary\": " +
                 "\"SocialCircle Invite (" + emailA + "," + emailB + ")\"," +
                 "\"location\": " +
                 "\"Madison, WI\"," +
                 "\"description\": " +
-                "\"SocialCircle Invitation\"," +
+                "\"" + gptResponse + "\"," +
                 "\"attendees\": " +
                 "[" +
                 "{\"email\": \"" + emailA + "\"}," +
@@ -122,7 +132,7 @@ public class CronAPI {
     }
 
     private Connect getPendingConnect(Long userId, Long otherUserId) {
-        return connectDao.getByUsers(userId, otherUserId, true);
+        return connectDao.getPendingByUsers(userId, otherUserId);
     }
 
     private double curveSum(Long maxProgress, Contact contact) {
@@ -154,6 +164,33 @@ public class CronAPI {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getGptResponse(String notesString) throws UnirestException {
+        String url = "https://api.openai.com/v1/completions";
+        String authorizationHeader = "Bearer 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";
+
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("model", "text-davinci-003");
+        requestBody.put("prompt", "Write a few talking points with a friend based on the following notes from previous conversations: " + notesString + ". If the string is empty suggest some general talking points. Make the points sound causal and super friendly.");
+        requestBody.put("temperature", 0.7);
+        requestBody.put("max_tokens", 256);
+        requestBody.put("top_p", 1);
+        requestBody.put("frequency_penalty", 0);
+        requestBody.put("presence_penalty", 0);
+
+        HttpResponse<JsonNode> response = Unirest.post(url)
+                .header("Authorization", authorizationHeader)
+                .header("Content-Type", "application/json")
+                .body(requestBody)
+                .asJson();
+
+        int statusCode = response.getStatus();
+        JSONObject responseBody = response.getBody().getObject();
+        //String responseStr = response.getBody().getObject().get("choices").myArrayList.get(0).get("text");
+
+        String fullResponse = response.getBody().getObject().get("choices").toString();
+        return fullResponse.substring(47, fullResponse.length() - 19);
     }
 
 }

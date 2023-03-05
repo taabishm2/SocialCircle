@@ -22,7 +22,7 @@ public class ConnectAPI {
     public Connect add(Long connectedWithUserId, Integer score, String notes) throws ApiException {
         Long userA = SecurityUtil.getPrincipal().getUserId();
         Long userB = connectedWithUserId;
-        Connect pendingSuggestion = connectDao.getByUsers(Math.min(userA, userB), Math.max(userA, userB), true);
+        Connect pendingSuggestion = connectDao.getPendingByUsers(Math.min(userA, userB), Math.max(userA, userB));
 
         if (Objects.isNull(pendingSuggestion)) {
             Connect connect = new Connect();

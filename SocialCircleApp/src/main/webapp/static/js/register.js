@@ -20,7 +20,9 @@ function login(event) {
         },
         success: function(response) {
             getSuccessSnackbar("Success! Redirecting to Log In...");
-            //await delay(3000);
+            setTimeout(function() {
+            console.log('Waiting');
+            }, 2000);
             window.location.replace(getBaseUrl() + "/login");
         },
         error: handleAjaxError

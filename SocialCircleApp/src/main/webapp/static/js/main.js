@@ -436,7 +436,7 @@ function populateAuthData(needsAuth, data) {
     } else {
         var nav = document.getElementById("logged-in-nav-dropdown");
         nav.style.display = "none";
-        document.getElementById("login-link-nav-holder").innerHTML = "<button type=\"button\" onclick=\"location.href='/cocourse/login'\" class=\"btn btn-outline-primary\">Login</button>";
+        document.getElementById("login-link-nav-holder").innerHTML = "<button type=\"button\" onclick=\"location.href='/socialcircle/login'\" class=\"btn btn-outline-primary\">Login</button>";
     }
 }
 
@@ -457,7 +457,9 @@ function logout() {
     });
 }
 
-const delay = ms => new Promise(res => setTimeout(res, ms));
+function delay(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
 
 getCheckAuthentication(false);
 document.getElementById('logout-link').onclick = logout;

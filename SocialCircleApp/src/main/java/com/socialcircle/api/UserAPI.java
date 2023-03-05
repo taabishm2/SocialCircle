@@ -101,6 +101,7 @@ public class UserAPI extends AbstractAPI {
         user.setEmail(registerForm.getEmail());
         user.setPhone(registerForm.getPhone());
         user.setCity(registerForm.getCity());
+        user.setPersonalityType(registerForm.getPersonalityType());
         user.setAttribute1(registerForm.getAttribute1());
         user.setAttribute2(registerForm.getAttribute2());
         user.setAttribute3(registerForm.getAttribute3());

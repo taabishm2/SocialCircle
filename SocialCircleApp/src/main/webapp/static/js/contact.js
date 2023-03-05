@@ -69,6 +69,22 @@ function connectWith(id) {
     return false;
 }
 
+function generate() {
+    $("#connectSuggestBtn").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...')
+    $("#connectSuggestBtn").prop("disabled", true);
+
+    $.ajax({
+        url: getBaseUrl() + "/api/contacts/generate-suggestions",
+        type: "POST",
+        success: function(response) {
+            $("#connectSuggestBtn").html('Completed!');
+            getSuccessSnackbar("Success! Generate Suggestions");
+        },
+        error: handleAjaxError
+    });
+    return false;
+}
+
 function meetWith(id) {
     var json = JSON.parse(toJson($('#meetform' + id)));
     console.log(json);
@@ -233,4 +249,5 @@ function populateLikedContacts(response) {
 $(document).ready(function() {
     loadMostLikedContacts();
     $('#search-form').submit(search);
+    $('#connectSuggestBtn').click(generate);
 });

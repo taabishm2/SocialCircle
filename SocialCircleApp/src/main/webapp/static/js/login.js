@@ -12,8 +12,7 @@ function login(event) {
         },
         success: function(response) {
             getSuccessSnackbar("Logged in. Redirecting to home...");
-            //await delay(3000);
-            window.location.replace(getBaseUrl() + "/feed");
+            window.location.replace(getBaseUrl() + "/contact");
         },
         error: handleAjaxError
     });

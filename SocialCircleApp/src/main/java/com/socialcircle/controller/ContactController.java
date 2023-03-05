@@ -1,7 +1,9 @@
 package com.socialcircle.controller;
 
+import com.mashape.unirest.http.exceptions.UnirestException;
 import com.socialcircle.api.ApiException;
 import com.socialcircle.api.ContactAPI;
+import com.socialcircle.api.CronAPI;
 import com.socialcircle.api.RecommendationAPI;
 import com.socialcircle.entity.User;
 import com.socialcircle.model.data.AuthData;
@@ -18,6 +20,9 @@ import java.util.List;
 public class ContactController {
     @Autowired
     private ContactAPI contactAPI;
+
+    @Autowired
+    private CronAPI cronAPI;
 
     @Autowired
     private RecommendationAPI recommendationAPI;
@@ -40,6 +45,11 @@ public class ContactController {
     @RequestMapping(value = "/recommendations", method = RequestMethod.GET)
     public List<UserData> getLoggedInUser() throws ApiException {
         return recommendationAPI.getRecommendations();
+    }
+
+    @RequestMapping(value = "/generate-suggestions", method = RequestMethod.POST)
+    public void generateConnectSuggestions() throws UnirestException {
+        cronAPI.generateSuggestions();
     }
 
 }

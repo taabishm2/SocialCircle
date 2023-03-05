@@ -1,15 +1,9 @@
-// JS STUFF
-
-// console.log("Javascript was loaded...");
-
-function getBaseUrl() {
-    // TODO
-    return "";
-}
+console.log("formHandler.js was loaded...");
 
 $(function() {
-    $('#connection-form').submit(function(event) {
+    $(document).on("submit", "#connection-form", function(event) {
       event.preventDefault();
+      console.log("here");
       console.log($(this).serializeArray());
     });
 });
@@ -17,7 +11,7 @@ $(function() {
 $(function() {
     $('#connect-form').submit(function(event) {
       event.preventDefault();
-      console.log($(this).serializeArray());
+      //console.log($(this).serializeArray());
     });
 });
 
@@ -27,21 +21,21 @@ function addConnection(data) {
     data.reverse()
 
     let formdata = {};
-    if(data.length == 4) {
+    if(data.length == 5) {
         formdata["known"] = (data[3].value == "on") ? true : false;
     }
     formdata["known"] = false;
 
-    formdata["start"] = int(data[2].value);
-    formdata["stop"] = int(data[1].value);
-    formdata["time"] = int(data[0].value)
+    formdata["initialRate"] = int(data[2].value);
+    formdata["targetRate"] = int(data[1].value);
+    formdata["timeframe"] = int(data[0].value)
+
+    console.log("adding connection with: ", formdata);
 
     $.ajax({
-        url: getBaseUrl() + "/api/addconnection", // TODO change call
+        url: getBaseUrl() + "/api/contact/add-contact/" + userid,
         type: "POST",
-        data: {
-            formdata
-        }
+        data: formdata,
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
         },

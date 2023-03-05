@@ -35,7 +35,9 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
 
 		<!-- Our Scripts -->
+        <script src="./js/apiUtil.js"></script>
 		<script src="./js/formHandler.js"></script>
+        <script src="./js/getPageData.js"></script>
 
 		<!-- =======================================================
         * Template Name: NiceAdmin - v2.5.0
@@ -157,134 +159,10 @@
 				</form>
 			</div>
 
-			<section class="section w-75">
-				<div class="card">
-					<div class="card-body p-5 pb-1 pt-1">
-						<h5 class="card-title">TODO Name</h5>
-						<hr class="mt-0 mb-0" />
-						<div class="row">
-							<div class="col p-2">
-								<p class="m-1">TODO Email</p>
-								<p class="m-1">TODO Location</p>
-							</div>
-							<div class="col d-flex justify-content-center align-items-center p-2">
-								<button
-									type="button"
-									class="btn btn-outline-dark h-75"
-									data-bs-toggle="modal"
-									data-bs-target="#verticalycentered"
-								>
-									Add Connection
-								</button>
-								<div class="modal fade" id="verticalycentered" tabindex="-1">
-									<div class="modal-dialog modal-dialog-centered">
-										<div class="modal-content">
-											<div class="modal-header">
-												<h5 class="modal-title">Add Connection</h5>
-												<button
-													type="button"
-													class="btn-close"
-													data-bs-dismiss="modal"
-													aria-label="Close"
-												></button>
-											</div>
-											<div class="modal-body">
-												<form class="row g-3" id="connection-form">
-													<div class="row-md-4">
-														<label for="connection-form-known" class="form-label"
-															>Already Known</label
-														>
-														<input
-															type="checkbox"
-															id="connection-form-known"
-															name="connection-form-known"
-														/>
-													</div>
-													<div class="row-md-4">
-														<label for="connection-form-start" class="form-label"
-															>Current Connection:</label
-														>
-														<br />
-														<label
-															for="connection-form-start"
-															class="form-label d-inline-block"
-															>I see them every
-														</label>
-														<input
-															type="number"
-															class="form-control w-25 d-inline-block"
-															id="connection-form-start"
-															name="connection-form-start"
-															value="1"
-															required
-															min="0"
-														/>
-														<label
-															for="connection-form-start"
-															class="form-label d-inline-block"
-															>days</label
-														>
-													</div>
-													<div class="row-md-4">
-														<label for="connection-form-stop" class="form-label"
-															>Desired Connection:
-														</label>
-														<br />
-														<label
-															for="connection-form-stop"
-															class="form-label d-inline-block"
-															>I want to see them every
-														</label>
-														<input
-															type="number"
-															class="form-control w-25 d-inline-block"
-															id="connection-form-stop"
-															name="connection-form-stop"
-															value="10"
-															required
-															min="0"
-														/>
-														<label
-															for="connection-form-stop"
-															class="form-label d-inline-block"
-															>days</label
-														>
-													</div>
-													<div class="row-md-4">
-														<label for="connection-form-time" class="form-label"
-															>Timeframe:
-														</label>
-														<input
-															type="number"
-															class="form-control"
-															id="connection-form-time"
-															name="connection-form-time"
-															value="100"
-															required
-															min="0"
-														/>
-													</div>
-													<div class="col-12">
-														<button
-															id="connection-form-btn"
-															class="btn btn-outline-dark"
-															type="submit"
-															data-bs-dismiss="modal"
-														>
-															Submit
-														</button>
-													</div>
-												</form>
-											</div>
-											<!-- TODO Button action -->
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+			<section class="section w-75" id="connections-main-section">
+				
 			</section>
+
 		</main>
 		<!-- End Main Body -->
 

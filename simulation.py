@@ -197,13 +197,13 @@ class Simulation:
                     np.arange(1, self.time - self.con_to_start[(user1, user2)] + 1, 1)
                 ) for user1, user2 in users_to_archive
             ]
-            for ts, time_ser in enumerate(interactions):
-                plt.plot(
-                    np.arange(1, len(time_ser) + 1, 1),
-                    time_ser
-                )
-                plt.title(f'score: {self.con_to_score[(user1, user2)]}')
-                plt.savefig(f'fig/{self.time}_{ts}.png')
+            # for ts, time_ser in enumerate(interactions):
+            #     plt.plot(
+            #         np.arange(1, len(time_ser) + 1, 1),
+            #         time_ser
+            #     )
+            #     plt.title(f'score: {self.con_to_score[(user1, user2)]}')
+            #     plt.savefig(f'fig/{self.time}_{ts}.png')
 
             interactions = torch.tensor(interactions, dtype=torch.float32)
             # print(torch.mean(interactions, dim=-1))

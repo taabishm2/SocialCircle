@@ -3,11 +3,13 @@ package com.socialcircle.api;
 import com.socialcircle.config.security.SecurityUtil;
 import com.socialcircle.dao.ConnectDao;
 import com.socialcircle.entity.Connect;
-import com.socialcircle.model.form.ConnectForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,15 +18,28 @@ public class ConnectAPI {
     @Autowired
     private ConnectDao connectDao;
 
-    public Connect add(ConnectForm form) throws ApiException {
-        Connect connect = new Connect();
-        connect.setSourceUserId(SecurityUtil.getPrincipal().getUserId());
-        connect.setDestinationUserId(form.getConnectedWithUserId());
-        connect.setConnectTime(form.getConnectTime());
-        connect.setNotes(form.getNotes());
-        connectDao.persist(connect);
+    @Transactional(rollbackOn = ApiException.class)
+    public Connect add(Long connectedWithUserId, Integer score, String notes) throws ApiException {
+        Long userA = SecurityUtil.getPrincipal().getUserId();
+        Long userB = connectedWithUserId;
+        Connect pendingSuggestion = connectDao.getByUsers(Math.min(userA, userB), Math.max(userA, userB), true);
 
-        return connect;
+        if (Objects.isNull(pendingSuggestion)) {
+            Connect connect = new Connect();
+            connect.setSourceUserId(Math.min(userA, userB));
+            connect.setDestinationUserId(Math.max(userA, userB));
+            connect.setConnectTime(ZonedDateTime.now());
+            connect.setScore(score);
+            connect.setNotes(notes);
+            connectDao.persist(connect);
+            return connect;
+        } else {
+            pendingSuggestion.setIsSuggestion(false);
+            pendingSuggestion.setConnectTime(ZonedDateTime.now());
+            pendingSuggestion.setScore(score);
+            pendingSuggestion.setNotes(notes);
+            return pendingSuggestion;
+        }
     }
 
     public List<Connect> getConnectsToUser(Long userId) throws ApiException {

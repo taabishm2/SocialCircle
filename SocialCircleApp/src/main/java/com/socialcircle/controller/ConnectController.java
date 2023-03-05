@@ -9,6 +9,7 @@ import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Api
@@ -19,8 +20,10 @@ public class ConnectController {
     private ConnectAPI connectAPI;
 
     @RequestMapping(value = "/", method = RequestMethod.POST)
-    public Connect addConnect(@RequestBody ConnectForm form) throws ApiException {
-        return connectAPI.add(form);
+    public Connect addConnect(@RequestParam() Long connectedWithUserId,
+                              @RequestParam() Integer score,
+                              @RequestParam() String notes) throws ApiException {
+        return connectAPI.add(connectedWithUserId, score, notes);
     }
 
     @RequestMapping(value = "/user/{userId}", method = RequestMethod.GET)

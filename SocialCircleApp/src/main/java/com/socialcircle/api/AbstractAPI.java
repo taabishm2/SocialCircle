@@ -41,6 +41,11 @@ public class AbstractAPI {
             throw new ApiException(ApiException.Type.USER_ERROR, message);
     }
 
+    public void checkNotEmpty(String string, String message) throws ApiException {
+        if (Objects.isNull(string) || string.length() == 0)
+            throw new ApiException(ApiException.Type.USER_ERROR, message);
+    }
+
     public static void checkTrue(Boolean bool, String message) throws ApiException {
         if (!bool)
             throw new ApiException(ApiException.Type.USER_ERROR, message);

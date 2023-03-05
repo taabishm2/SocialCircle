@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.ZonedDateTimeSerializer;
+import com.mashape.unirest.http.Unirest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
@@ -97,6 +98,11 @@ public class SpringConfig implements WebMvcConfigurer {
     @Bean
     public BCryptPasswordEncoder getPasswordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public Unirest unirest() {
+        return new Unirest();
     }
 
 }

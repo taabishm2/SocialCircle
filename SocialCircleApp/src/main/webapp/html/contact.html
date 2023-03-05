@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <metaSnippet th:replace="snippets.html :: metaSnippet"></metaSnippet>
+    <title>socialcircle - Home</title>
+</head>
+
+<body>
+
+<header th:replace="snippets.html :: headerSnippet"></header>
+<aside th:replace="snippets.html :: asideSnippet"></aside>
+
+<main id="main" class="main">
+
+    <div class="pagetitle">
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                <li class="breadcrumb-item active">Contacts</li>
+            </ol>
+        </nav>
+    </div><!-- End Page Title -->
+
+    <div class="SearchBar">
+        <form id="search-form" class="search-form d-flex align-items-center">
+            <input type="text" class="form-control" name="query" id = "search-input" placeholder="Search" title="Enter search keyword">
+            <button id="search-button" title="Search" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+        </form>
+    </div><!-- End Search Bar -->
+
+
+    <div id="search-results-container-spinner" class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <div class="result" id="search-results-container" style="display:none">
+        <h5>Today's recommendations for you</h5>
+    </div>
+
+    <div class="user-cards" id="cards-list"></div><!--End User cards -->
+
+</main><!-- End #main -->
+
+<footer th:replace="snippets.html :: footerSnippet"></footer>
+<script th:src="@{/static/js/contact.js}"></script>
+
+</body>
+
+</html>

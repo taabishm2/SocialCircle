@@ -40,6 +40,7 @@ public class ContactAPI {
 
     @Transactional(rollbackFor = ApiException.class)
     public void addContact(Long userId, Integer initialRate, Integer targetRate, Integer timeframe) throws ApiException {
+        userApi.getCheck(userId);
         addContact(SecurityUtil.getPrincipal().getUserId(), userId, initialRate, targetRate, timeframe);
     }
 
@@ -50,10 +51,14 @@ public class ContactAPI {
         contact.setUserAId(userAId);
         contact.setUserBId(userBId);
         contact.setProgress(0L);
+        contact.setTimeframe(timeframe);
         contact.setInitialFrequency(getInitialRate(initialRate));
         contact.setTargetFrequency(getTargetRate(targetRate));
-        //contact.setDailyProgressRate(getProgressRate(initialRate, targetRate, timeframe));
         contactDao.persist(contact);
+    }
+
+    public List<Contact> getContactsForUser(Long userId) {
+        return contactDao.selectForUser(userId);
     }
 
     private Integer getTargetRate(Integer targetRate) {

@@ -1,18 +1,24 @@
 package com.socialcircle.api;
 
+import com.socialcircle.config.security.SecurityUtil;
 import com.socialcircle.config.security.UserPrincipal;
 import com.socialcircle.config.security.UserRole;
 import com.socialcircle.dao.UserDao;
+import com.socialcircle.entity.Contact;
 import com.socialcircle.entity.User;
 import com.socialcircle.model.data.AuthData;
+import com.socialcircle.model.data.UserData;
 import com.socialcircle.model.form.RegisterForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserAPI extends AbstractAPI {
@@ -69,15 +75,15 @@ public class UserAPI extends AbstractAPI {
 
     @Transactional(rollbackFor = ApiException.class)
     public User register(RegisterForm registerForm) throws ApiException {
-        checkNotNull(registerForm.getName(), "Name cannot be empty");
-        checkNotNull(registerForm.getEmail(), "Email cannot be empty");
-        checkNotNull(registerForm.getPassword(), "Password cannot be empty");
+        checkNotEmpty(registerForm.getName(), "Name cannot be empty");
+        checkNotEmpty(registerForm.getEmail(), "Email cannot be empty");
+        checkNotEmpty(registerForm.getPassword(), "Password cannot be empty");
 
-        if (Objects.isNull(registerForm.getAttribute1()) &&
-                Objects.isNull(registerForm.getAttribute2()) &&
-                Objects.isNull(registerForm.getAttribute3()) &&
-                Objects.isNull(registerForm.getAttribute4()) &&
-                Objects.isNull(registerForm.getAttribute5()) )
+        if (registerForm.getAttribute1().isEmpty() &&
+                registerForm.getAttribute2().isEmpty() &&
+                registerForm.getAttribute3().isEmpty() &&
+                registerForm.getAttribute4().isEmpty() &&
+                registerForm.getAttribute5().isEmpty())
             throw new ApiException(ApiException.Type.USER_ERROR, "All attributes cannot be empty");
 
         checkEmailNotExists(registerForm.getEmail().toLowerCase());
@@ -116,6 +122,30 @@ public class UserAPI extends AbstractAPI {
         return authData;
     }
 
+    public List<UserData> searchByName(String query) throws ApiException {
+        if (query.trim().length() == 0)
+            throw new ApiException(ApiException.Type.USER_ERROR, "Query cannot be empty");
+
+        List<User> users = dao.selectAll();
+        Long thisUserId = SecurityUtil.getPrincipal().getUserId();
+        List<Contact> userContacts = contactApi.getContactsForUser(thisUserId);
+        Set<Long> contactUserIds = userContacts.stream().map(Contact::getUserAId).collect(Collectors.toSet());
+        contactUserIds.addAll(userContacts.stream().map(Contact::getUserBId).collect(Collectors.toSet()));
+
+        users = users.stream().filter(course -> course.getName().toLowerCase()
+                .contains(query.toLowerCase().trim())).collect(Collectors.toList());
+
+        List<UserData> userDataList = new ArrayList<>();
+        for (User user: users) {
+            if (user.getUserId().equals(thisUserId)) continue;
+            UserData userData = new UserData();
+            userData.setUser(user);
+            userData.setIsContact(contactUserIds.contains(user.getUserId()));
+            userDataList.add(userData);
+        }
+
+        return userDataList;
+    }
 
 }
 

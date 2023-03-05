@@ -21,6 +21,11 @@ public class SiteUiController extends AbstractUiController {
         return getModelAndView("register.html");
     }
 
+    @RequestMapping(value = "/contact")
+    public ModelAndView contact(HttpServletRequest request) {
+        return getModelAndView("contact.html");
+    }
+
     @RequestMapping(value = "/login")
     public ModelAndView login(HttpServletRequest request) {
         HttpSession session = request.getSession();

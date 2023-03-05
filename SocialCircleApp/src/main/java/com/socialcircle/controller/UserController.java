@@ -5,6 +5,7 @@ import com.socialcircle.api.ContactAPI;
 import com.socialcircle.api.UserAPI;
 import com.socialcircle.entity.User;
 import com.socialcircle.model.data.AuthData;
+import com.socialcircle.model.data.UserData;
 import com.socialcircle.model.form.RegisterForm;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -36,6 +37,11 @@ public class UserController {
     @RequestMapping(value = "/auth", method = RequestMethod.GET)
     public AuthData getLoggedInUser() throws ApiException {
         return userApi.getLoggedInUser();
+    }
+
+    @RequestMapping(value = "/search", method = RequestMethod.GET)
+    public List<UserData> search(@RequestParam(name = "query") String query) throws ApiException {
+        return userApi.searchByName(query);
     }
 
 }

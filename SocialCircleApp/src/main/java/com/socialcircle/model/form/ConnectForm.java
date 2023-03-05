@@ -17,9 +17,6 @@ public class ConnectForm {
     private Long connectedWithUserId;
 
     @NotNull
-    private ZonedDateTime connectTime;
-
-    @NotNull
     private Integer score;
 
     private String notes;

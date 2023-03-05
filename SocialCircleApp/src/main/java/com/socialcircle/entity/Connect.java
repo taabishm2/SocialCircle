@@ -35,6 +35,6 @@ public class Connect extends BaseEntity {
     private String notes;
 
     @Column(nullable = false)
-    private Boolean isSuggestion;
+    private Boolean isSuggestion = false;
 
 }

@@ -4,7 +4,7 @@ import torch
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
-# from graph import plot_graph
+from graph import plot_graph
 
 class Simulation:
 
@@ -12,8 +12,8 @@ class Simulation:
         # num_users, num_attributes, num_personalies, num_user_tags, 
         self.user_table = pd.read_csv(user_csv)
 
-        self.user_colname = 'user_idx'
-        self.tag_colnames = [c for c in self.user_table.columns if c[0:2] == 'T_']
+        self.user_colname = 'Personality'
+        self.tag_colnames = [self.user_colname] + [c for c in self.user_table.columns if c[0:2] == 'T_']
         self.pref_colnames = [c for c in self.user_table.columns if c[0:2] == 'A_']
 
         self.num_users = len(self.user_table)
@@ -32,14 +32,19 @@ class Simulation:
         self.con_to_start = {}
         self.con_to_pred = {}
         self.con_to_score = {}
+        self.con_to_inter = {}
         self.archive_cons = set()
+        self.archive_users = {}
+        self.seen_users = set()
+        self.max_strong_cons = 3
+        self.strong_con_thresh = 0.9
         self.time_to_check = 30
 
         in_dim = self.num_attributes + self.num_personalities
-        out_dims = [in_dim // 2, in_dim // 2, in_dim // 3]
+        out_dims = [in_dim // 2, in_dim // 2, in_dim // 3, in_dim // 3]
         self.matcher = MatchingModel(in_dim, out_dims)
         # exit()
-        self.lr = 0.001
+        self.lr = 0.002
         self.optimizer = torch.optim.Adam(self.matcher.parameters(), lr=self.lr)
 
         self.time = 0
@@ -53,11 +58,26 @@ class Simulation:
         max_timesteps = 300
         for i in range(max_timesteps):
             print('timestep', i)
-            print(self.num_users)
             self.timestep()
 
+        plt.cla()
+        plt.clf()
         plt.plot(np.arange(len(self.tmp_loss_list)), self.tmp_loss_list)
         plt.savefig('loss.png')
+
+        print()
+        print('total_edges:', len(self.con_to_score) / 2)
+        print('total connected users:', len(self.seen_users))
+
+        count_strong_cons = []
+        for idx in self.seen_users:
+            num_strong_cons = np.sum(
+                np.where(self.graph_mat[idx] >= self.strong_con_thresh, 1, 0)
+            )
+            count_strong_cons.append(num_strong_cons)
+        count_strong_cons = np.array(count_strong_cons)
+        print(np.sum(np.where(count_strong_cons > 0, 1, 0)), ' users with >= 1 strong connections') 
+        print(np.sum(np.where(count_strong_cons > self.max_strong_cons, 1, 0)), f' users with >= {self.max_strong_cons} strong connections') 
 
     
     # thing that stores time, x, and y
@@ -79,9 +99,8 @@ class Simulation:
 
 
     def interaction_func(self, score, con_time):
-        t = 0.5
-        hump_len = 8
-
+        hump_len = 12
+        t = 0.8
         user_func = score \
                     * (2 ** (1 / (-con_time))
                         + ((con_time ** 2 * (score - t - np.abs(score - t))) / hump_len)
@@ -96,7 +115,9 @@ class Simulation:
         user_tuple = (user1, user2)
         user_tuple_r = (user2, user1)
         # if they haven't connected in the past and aren't currently connected, connect them
-        if user_tuple not in self.curr_cons and user_tuple not in self.archive_cons:
+        if user_tuple not in self.curr_cons and user_tuple not in self.archive_cons \
+        and user1 not in self.archive_users and user2 not in self.archive_users:
+            
             self.curr_cons.add(user_tuple) # add edge to known connections list
             self.curr_cons.add(user_tuple_r)
             
@@ -110,6 +131,11 @@ class Simulation:
             self.con_to_score[user_tuple] = score # add the score (invisible to predictive)
             self.con_to_score[user_tuple_r] = score
 
+            self.archive_users[user1] = self.time
+            self.archive_users[user2] = self.time
+
+            self.seen_users.add(user1)
+            self.seen_users.add(user2)
             # self.con_to_pred[user_tuple] = grad_pred # store the pred for loss calculation
             # self.con_to_pred[user_tuple_r] = grad_pred
             
@@ -137,7 +163,22 @@ class Simulation:
 
         except KeyError as e: 
             pass
-         
+
+    def try_unarchive_users(self):
+        users_to_unarchive = []
+        for idx in self.archive_users:
+            num_strong_cons = np.sum(
+                np.where(self.graph_mat[idx] >= self.strong_con_thresh, 1, 0)
+            )
+            # print(num_strong_cons)
+
+            if self.time - self.archive_users[idx] > self.time_to_check \
+            and num_strong_cons <= self.max_strong_cons:
+                users_to_unarchive.append(idx)
+        
+        for idx in users_to_unarchive:
+            del self.archive_users[idx]
+
 
     def timestep(self):
         # runs the entire simulation for one timestep
@@ -145,11 +186,12 @@ class Simulation:
         # get list of all users who requested a new match
         user_idxs = self.get_match_requests()
         if len(user_idxs) > 0:
-            print('attempting to give matches to', len(user_idxs), 'users')
+            # print('attempting to give matches to', len(user_idxs), 'users')
             # for each of these users, generate a predicted match ranking
             preds = self.get_match_ranking(user_idxs)
             preds = np.reshape(preds, (len(user_idxs), -1))
             
+            count = 0
             # for each of these users (again), pick the match with the highest combined score
             # (min or product between the two user's scores) and generate the interaction timeseries
 
@@ -162,51 +204,61 @@ class Simulation:
                 #look through the predicted scores largest to smallest
                 for user2 in sort_perm:
                     if self.try_add_known_connection(user1, user2):
+                        count += 1
                         break               
             
+            print('matched', count, '/', len(user_idxs), 'users')
+        
         # for each of these users (again), if it has been x timesteps, check the interaction timeseries
         # and aggregate it into a single success metric (maybe avg # of interactions and their reviews)
         # and backprop through the matcher model
         self.update_current_connections()
 
-        # if len(self.con_to_score) > 0:
-        #     plot_graph(self.con_to_score, self.num_users, f'fig/{self.time}.png')
-            
+        if len(self.con_to_score) > 0 and self.time % 10 == 0:
+            plot_graph(self.con_to_inter, self.num_users, f'fig/{self.time}.png')
+        
+        self.try_unarchive_users()
         self.time += 1
 
 
     def update_edge(self, user_idx1, user_idx2, value):
         self.graph_mat[user_idx1, user_idx2] = value
         self.graph_mat[user_idx2, user_idx1] = value
+        self.con_to_inter[(user_idx1, user_idx2)] = value.item()
+        self.con_to_inter[(user_idx2, user_idx1)] = value.item()
 
 
     def update_current_connections(self):
-        users_to_archive = []
+        cons_to_archive = []
 
-        for (user1, user2), start_time in self.con_to_start.items():
+        for (user1, user2), start_time in self.con_to_score.items():
             new_edge_weight = self.interaction_func(
                 self.con_to_score[(user1, user2)],
                 max(self.time - start_time, 1e-4)
             )
             self.update_edge(user1, user2, new_edge_weight)
-            
+
+        for (user1, user2), start_time in self.con_to_start.items():
             if self.time - start_time >= self.time_to_check:
-                users_to_archive.append((user1, user2))
+                cons_to_archive.append((user1, user2))
         
         # look up prediction value and backprop
-        if len(users_to_archive) > 0:
+        if len(cons_to_archive) > 0:
+            print('updating model')
             self.optimizer.zero_grad()
             grad_pred = self.predict_match_with_grad(
-                [edge[0] for edge in users_to_archive],
-                [edge[1] for edge in users_to_archive]
+                [edge[0] for edge in cons_to_archive],
+                [edge[1] for edge in cons_to_archive]
             )
             interactions = [
                 self.interaction_func(
                     self.con_to_score[(user1, user2)],
                     np.arange(1, self.time - self.con_to_start[(user1, user2)] + 1, 1)
-                ) for user1, user2 in users_to_archive
+                ) for user1, user2 in cons_to_archive
             ]
             # for ts, time_ser in enumerate(interactions):
+            #     plt.clf()
+            #     plt.cla()
             #     plt.plot(
             #         np.arange(1, len(time_ser) + 1, 1),
             #         time_ser
@@ -229,8 +281,9 @@ class Simulation:
             # print(self.matcher.layers._modules['0'].weight)
             
 
-            for user1, user2 in users_to_archive:
+            for user1, user2 in cons_to_archive:
                 self.archive_connection(user1, user2)
+            
 
 
     def get_match_requests(self):

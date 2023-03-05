@@ -22,7 +22,8 @@ def plot_graph(edge_to_weight, num_nodes, figname):
     edges,weights = zip(*nx.get_edge_attributes(G,'weight').items())
     # weights = [threshold(w, 0.3) for w in list(weights)]
     nx.draw(G, node_size = 3, node_color = '#000000', width = .1, edge_color = weights, edge_cmap=plt.cm.Blues, pos = pos)
-    plt.savefig(figname, dpi=200)
+    # plt.savefig(figname, dpi=200)
+
 
 
 # num_nodes = 20

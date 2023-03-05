@@ -5,12 +5,29 @@ import pandas as pd
 import time
 import matplotlib.pyplot as plt
 from graph import plot_graph
+import datetime as dt
 
 class Simulation:
 
     def __init__(self, user_csv):
         # num_users, num_attributes, num_personalies, num_user_tags, 
         self.user_table = pd.read_csv(user_csv)
+        # self.interaction_table = {
+        #     'user1': [],
+        #     'user2': [],
+        #     'rating': [],
+        #     'notes': []
+        # }
+        self.interaction_table = {'row': []}
+        self.interaction_tracker = {}
+        self.interaction_idx = 0
+        self.possible_notes = [
+            'fun person!',
+            'birthday in 2 months',
+            'dont mention the thing',
+            'that was kind of boring',
+            'ask why they had to go on a trip',
+        ]
 
         self.user_colname = 'Personality'
         self.tag_colnames = [self.user_colname] + [c for c in self.user_table.columns if c[0:2] == 'T_']
@@ -41,7 +58,7 @@ class Simulation:
         self.time_to_check = 30
 
         in_dim = self.num_attributes + self.num_personalities
-        out_dims = [in_dim // 2, in_dim // 2, in_dim // 3, in_dim // 3]
+        out_dims = [in_dim // 2, in_dim // 2, in_dim // 3]
         self.matcher = MatchingModel(in_dim, out_dims)
         # exit()
         self.lr = 0.002
@@ -55,7 +72,7 @@ class Simulation:
 
         self.tmp_loss_list = []
 
-        max_timesteps = 300
+        max_timesteps = 400
         for i in range(max_timesteps):
             print('timestep', i)
             self.timestep()
@@ -78,6 +95,11 @@ class Simulation:
         count_strong_cons = np.array(count_strong_cons)
         print(np.sum(np.where(count_strong_cons > 0, 1, 0)), ' users with >= 1 strong connections') 
         print(np.sum(np.where(count_strong_cons > self.max_strong_cons, 1, 0)), f' users with >= {self.max_strong_cons} strong connections') 
+
+        for key in self.interaction_table:
+            self.interaction_table[key] = pd.Series(self.interaction_table[key])
+        
+        pd.DataFrame(self.interaction_table).to_csv('interaction_table.csv')
 
     
     # thing that stores time, x, and y
@@ -215,17 +237,63 @@ class Simulation:
         self.update_current_connections()
 
         if len(self.con_to_score) > 0 and self.time % 10 == 0:
+            plt.figure(figsize=(20, 10))
+            plt.tight_layout()
+
+            plt.subplot(1, 2, 1)
             plot_graph(self.con_to_inter, self.num_users, f'fig/{self.time}.png')
+            plt.title(f'Day {self.time} graph', fontdict={'fontsize': 20})
+
+            plt.subplot(1, 2, 2)
+            plt.plot(np.arange(len(self.tmp_loss_list)), self.tmp_loss_list)
+            plt.title(f'Day {self.time} loss', fontdict={'fontsize': 20})
+            plt.subplots_adjust(wspace=0, hspace=0)
+
+            plt.savefig(f'fig/{self.time}.png', bbox_inches='tight')
+
+            plt.cla()
+            plt.clf()
         
         self.try_unarchive_users()
         self.time += 1
 
+
+    def log_interaction(self, user_idx1, user_idx2, value):
+        interac_tuple = (min(user_idx1, user_idx2), max(user_idx1, user_idx2))
+        if interac_tuple not in self.interaction_tracker:
+            self.interaction_tracker[interac_tuple] = value.item()
+        else:
+            self.interaction_tracker[interac_tuple] = self.interaction_tracker[interac_tuple] + value.item()
+        if self.interaction_tracker[interac_tuple] >= 1:
+            # self.interaction_table['user1'].append(min(user_idx1, user_idx2))
+            # self.interaction_table['user2'].append(max(user_idx1, user_idx2))
+            # self.interaction_table['rating'].append(np.random.randint(1, 10))
+            # self.interaction_table['notes'].append(
+            #     self.possible_notes[np.random.randint(0, len(self.possible_notes) - 1)]
+            # )
+            
+            sim_date = dt.datetime(year=2022, month=1, day=1) + dt.timedelta(days=self.time)
+            row_str = f'(0, NOW(), NOW(), {self.interaction_idx}, {interac_tuple[0]}, {interac_tuple[1]}, "{sim_date}", {np.random.randint(1, 10)}, "{self.possible_notes[np.random.randint(0, len(self.possible_notes) - 1)]}", false),'
+            if self.interaction_idx % 5000 == 0:
+                self.interaction_table['row'].append('insert into socialcircle_connect(version, created_at, updated_at, connect_id, source_user_id, destination_user_id, connect_time, score, notes, is_suggestion) VALUES ' + row_str)
+            else:
+                tmp_list = self.interaction_table['row']
+                tmp_list[-1] = tmp_list[-1] + row_str
+                self.interaction_table['row'] = tmp_list
+
+            self.interaction_tracker[interac_tuple] = self.interaction_tracker[interac_tuple] \
+                                                    - int(self.interaction_tracker[interac_tuple])
+            self.interaction_idx += 1
+            
 
     def update_edge(self, user_idx1, user_idx2, value):
         self.graph_mat[user_idx1, user_idx2] = value
         self.graph_mat[user_idx2, user_idx1] = value
         self.con_to_inter[(user_idx1, user_idx2)] = value.item()
         self.con_to_inter[(user_idx2, user_idx1)] = value.item()
+
+        self.log_interaction(user_idx1, user_idx2, value)
+
 
 
     def update_current_connections(self):

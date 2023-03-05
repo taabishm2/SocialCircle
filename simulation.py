@@ -2,6 +2,8 @@ import numpy as np
 from matching_model import MatchingModel
 import torch
 import pandas as pd
+import time
+import matplotlib.pyplot as plt
 
 class Simulation:
 
@@ -23,8 +25,15 @@ class Simulation:
 
         self.graph_mat = np.zeros((self.num_users, self.num_users))
         self.curr_cons = set()
+        self.con_to_start = {}
+        self.con_to_pred = {}
+        self.con_to_score = {}
         self.dead_cons = set()
+        self.time_to_check = 30
+
         self.matcher = MatchingModel(self.num_attributes)
+        self.lr = 0.01
+        self.optimizer = torch.optim.Adam(self.matcher.parameters(), lr=self.lr)
 
         self.time = 0
 
@@ -32,8 +41,11 @@ class Simulation:
         self.max_req_prob = 0.8
         self.req_prob_stretch = 20
 
-        for i in range(2):
+        for i in range(100):
+            print('timestep', i)
             self.timestep()
+            # time.sleep(1)
+
 
     
     # thing that stores time, x, and y
@@ -45,32 +57,104 @@ class Simulation:
                 - (1 / ((1 / self.req_prob_stretch) * x + np.sqrt(1 / self.max_req_prob)) ** 2)
 
 
+    def interaction_func(self, score, con_time):
+        t = 0.5
+        hump_len = 8
+
+        user_func = score \
+                    * (2 ** (1 / (-con_time))
+                        + ((con_time ** 2 * (score - t - np.abs(score - t))) / hump_len)
+                      )
+        return np.where(user_func < 0, 0, user_func)
+
+
+    def try_add_known_connection(self, user1, user2):
+        user_tuple = (user1, user2)
+        user_tuple_r = (user2, user1)
+        # if they haven't connected in the past and aren't currently connected, connect them
+        if user_tuple not in self.curr_cons and user_tuple not in self.dead_cons:
+            self.curr_cons.add(user_tuple) # add edge to known connections list
+            self.curr_cons.add(user_tuple_r)
+            
+            self.con_to_start[user_tuple] = self.time # add start time for interaction function
+            self.con_to_start[user_tuple_r] = self.time
+
+            score = np.dot(self.bin_tag_mat[user1], self.pref_mat[user2]) \
+              * np.dot(self.bin_tag_mat[user2], self.pref_mat[user1])
+            score = 1 / (1 + np.exp(score))
+            
+            if score == 0:
+                # print(self.bin_tag_mat[user1])
+                # print(self.bin_tag_mat[user2])
+                print(user1, user2)
+                print(self.tag_mat[user1])
+                print(self.bin_tag_mat[user1])
+                exit()
+            self.con_to_score[user_tuple] = score # add the score (invisible to predictive)
+            self.con_to_score[user_tuple_r] = score
+
+            # self.con_to_pred[user_tuple] = grad_pred # store the pred for loss calculation
+            # self.con_to_pred[user_tuple_r] = grad_pred
+            
+            print('added', user_tuple)
+            return True
+        
+        return False
+    
+
     def timestep(self):
         # runs the entire simulation for one timestep
         
         # get list of all users who requested a new match
         user_idxs = self.get_match_requests()
         if len(user_idxs) > 0:
+            print('attempting to give matches to', len(user_idxs), 'users')
             # for each of these users, generate a predicted match ranking
             preds = self.get_match_ranking(user_idxs)
-            print(preds.shape)
-            print(np.reshape(preds, (len(user_idxs), -1)).shape)
-            for i in len(preds):
-                sort_perm = np.argsort(preds[i])
-                user1 = user_idxs[i]
-                for user2 in sort_perm:
-                    if (user1, user2) not in self.curr_cons and (user1, user2) not in self.dead_cons:
-                        self.curr_cons.add((user1, user2))
-                        break
+            preds = np.reshape(preds, (len(user_idxs), -1))
             
+            # for each of these users (again), pick the match with the highest combined score
+            # (min or product between the two user's scores) and generate the interaction timeseries
 
-        # for each of these users (again), pick the match with the highest combined score
-        # (min or product between the two user's scores) and generate the interaction timeseries
-
+            # for each user's prediciton list
+            for i in range(preds.shape[0]):
+                sort_perm = np.argsort(preds[i]) #sort the predictions
+                sort_perm = np.flip(sort_perm)
+                print(sort_perm)
+                user1 = user_idxs[i]
+                #look through the predicted scores largest to smallest
+                for user2 in sort_perm:
+                    if self.try_add_known_connection(user1, user2):
+                        break               
+            
         # for each of these users (again), if it has been x timesteps, check the interaction timeseries
         # and aggregate it into a single success metric (maybe avg # of interactions and their reviews)
         # and backprop through the matcher model
+        
+        for (user1, user2), start_time in self.con_to_start.items():
+            if self.time - start_time >= self.time_to_check:
+                # get avg interaction time series value
+                steps = np.arange(self.time - start_time)
+                steps[0] = steps[0] + 1e-4
+                interactions = self.interaction_func(
+                    self.con_to_score[(user1, user2)],
+                    steps
+                )
 
+                # plt.plot(steps, interactions)
+                # plt.title(f'score: {self.con_to_score[(user1, user2)]}')
+                # plt.show()
+                # plt.cla()
+                # plt.clf()
+
+                # look up prediction value and backprop
+                self.optimizer.zero_grad()
+                grad_pred = self.predict_match_with_grad(user1, user2)
+                loss = (
+                    grad_pred - torch.mean(torch.tensor(interactions, dtype=torch.float32))
+                ) ** 2
+                loss.backward()
+                
         self.time += 1
 
 
@@ -96,8 +180,8 @@ class Simulation:
 
     def create_binary(self, tag_mat):
         feature_mat = np.zeros((len(tag_mat), self.num_attributes))
-        for row in tag_mat:
-            feature_mat[row] = 1
+        for i in range(len(tag_mat)):
+            feature_mat[i][tag_mat[i]] = 1
         return feature_mat
 
 
@@ -114,18 +198,29 @@ class Simulation:
         return cartprod
 
 
+    def predict_match_with_grad(self, user1, user2):
+        pair_tensor = torch.tensor(
+            np.concatenate([self.bin_tag_mat[user1], self.bin_tag_mat[user2]]),
+            dtype=torch.float32
+        )
+        pair_tensor = torch.unsqueeze(pair_tensor, dim=0)
+        pred = self.matcher(pair_tensor)
+        return pred
+
+
     def get_match_ranking(self, user_idxs):
         # returns a match for the user given by user_idx
         # meaning it returns a list of predicted match scores between all users and user_idx
         
-        to_match = self.bin_tag_mat[user_idxs]
-        all_pairs = self.cartprod_concat(to_match, self.bin_tag_mat)
-        
-        pair_tensor = torch.tensor(all_pairs, dtype=torch.float32)
-
-        preds = self.matcher(pair_tensor)
-        preds = torch.squeeze(preds, dim=-1)
-        preds = preds.detach().numpy()
+        with torch.no_grad():
+            to_match = self.bin_tag_mat[user_idxs]
+            all_pairs = self.cartprod_concat(to_match, self.bin_tag_mat)
+            
+            pair_tensor = torch.tensor(all_pairs, dtype=torch.float32)
+            # print('pair_tensor shape', pair_tensor.shape)
+            preds = self.matcher(pair_tensor)
+            preds = torch.squeeze(preds, dim=-1).detach().numpy()
+            
         
         # sort_perm = np.argsort(preds)
         return preds

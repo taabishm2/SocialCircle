@@ -1,34 +1,23 @@
 from matplotlib import pyplot as plt
 import networkx as nx
-#from simulation import Simulation
+import random
+import numpy as np
+import time
+
 
 # =============================================================================
-# s = Simulation('users.csv')
-# edges = s.curr_cons
-# =============================================================================
-
-
-edges = {(0, 1), (0, 2), (1, 2)}
-edge_to_weight = {(0, 1) : .8, (0, 2) : .1, (1, 2) : .4}
-
-def plot_graph(edges, edge_to_weight):
-    G = nx.Graph(edges)
-    for u,v,d in G.edges(data=True):
-        d['weight'] = edge_to_weight[(u, v)]
-    edges,weights = zip(*nx.get_edge_attributes(G,'weight').items())
-    nx.draw(G, edge_color = weights, width = 8, edgelist=edges,edge_cmap=plt.cm.Blues)
-    plt.show()
-    
-plot_graph(edges, edge_to_weight)
-
-# =============================================================================
-# def self.plot_graph():
-#     G = nx.Graph(self.edges)
-#     for u,v,d in G.edges(data=True):
-#         d['weight'] = self.con_to_score[(u, v)]
-#     edges,weights = zip(*nx.get_edge_attributes(G,'weight').items())
-#     nx.draw(G, edge_color = weights, width = 8, edgelist=edges,edge_cmap=plt.cm.Blues)
-#     plt.show()
+# num_nodes = 600
+# s = time.time()
+# edges = np.random.choice([0, 1], size=(num_nodes, num_nodes))
+# edge_to_weight = {(i, j) : np.random.rand() for i in range(num_nodes) for j in range(num_nodes) 
+#                   if np.random.rand() < 0.05 and i != j}
 # 
-#     
 # =============================================================================
+def plot_graph(edges, edge_to_weight, num_nodes):
+    rng = np.random.RandomState(0)
+    pos = {i:(rng.rand(), rng.rand()) for i in range(num_nodes)}
+    G = nx.Graph()
+    G.add_weighted_edges_from([(i, j, w) for (i, j), w in edge_to_weight.items()])
+    edges,weights = zip(*nx.get_edge_attributes(G,'weight').items())
+    nx.draw(G, node_size = 10, node_color = '#000000', width = .1, edge_color = weights, edge_cmap=plt.cm.Blues, pos = pos)
+

@@ -51,4 +51,13 @@ public class ConnectAPI {
                 i.getDestinationUserId().equals(thisUserId)).collect(Collectors.toList());
     }
 
+    public List<Connect> getRecentConnects() throws ApiException {
+        Long thisUserId = SecurityUtil.getPrincipal().getUserId();
+
+        List<Connect> connects = connectDao.selectMultiple("sourceUser", thisUserId);
+        return connects.stream().filter(i -> i.getSourceUserId().equals(thisUserId) ||
+                i.getDestinationUserId().equals(thisUserId)).sorted(Comparator.comparing(Connect::connectTime).reversed())
+                .limit(10).collect(Collectors.toList());
+    }
+
 }

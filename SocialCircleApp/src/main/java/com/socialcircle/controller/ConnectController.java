@@ -31,4 +31,9 @@ public class ConnectController {
         return connectAPI.getConnectsToUser(userId);
     }
 
+    @RequestMapping(value = "/recent", method = RequestMethod.GET)
+    public List<Connect> getRecentConnects() throws ApiException {
+        return connectAPI.getRecentConnects(userId);
+    }
+
 }

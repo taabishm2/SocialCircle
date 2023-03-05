@@ -4,6 +4,7 @@ import torch
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
+from graph import plot_graph
 
 class Simulation:
 
@@ -158,6 +159,9 @@ class Simulation:
         # and aggregate it into a single success metric (maybe avg # of interactions and their reviews)
         # and backprop through the matcher model
         self.update_current_connections()
+
+        if len(self.con_to_score) > 0:
+            plot_graph(self.con_to_score, len(self.con_to_score))
             
         self.time += 1
 

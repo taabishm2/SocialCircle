@@ -130,8 +130,24 @@ class Simulation:
         # for each of these users (again), if it has been x timesteps, check the interaction timeseries
         # and aggregate it into a single success metric (maybe avg # of interactions and their reviews)
         # and backprop through the matcher model
-        
+        self.update_current_connections()
+            
+        self.time += 1
+
+
+    def update_edge(self, user_idx1, user_idx2, value):
+        self.graph_mat[user_idx1, user_idx2] = value
+        self.graph_mat[user_idx2, user_idx1] = value
+
+
+    def update_current_connections(self):
         for (user1, user2), start_time in self.con_to_start.items():
+            new_edge_weight = self.interaction_func(
+                self.con_to_score[(user1, user2)],
+                max(self.time - start_time, 1e-4)
+            )
+            self.update_edge(user1, user2, new_edge_weight)
+
             if self.time - start_time >= self.time_to_check:
                 # get avg interaction time series value
                 steps = np.arange(self.time - start_time)
@@ -154,18 +170,6 @@ class Simulation:
                     grad_pred - torch.mean(torch.tensor(interactions, dtype=torch.float32))
                 ) ** 2
                 loss.backward()
-                
-        self.time += 1
-
-
-    def update_edge(self, user_idx1, user_idx2, value):
-        self.graph_mat[user_idx1, user_idx2] = value
-        self.graph_mat[user_idx2, user_idx1] = value
-
-
-    def update_current_connections(self):
-        for idx1, idx2 in list(self.curr_cons):
-            self.update_edge(idx1, idx2, self.graph_mat[idx1, idx2] + 0.01)
 
 
     def get_match_requests(self):

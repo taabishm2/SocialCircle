@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <metaSnippet th:replace="snippets.html :: metaSnippet"></metaSnippet>
+    <title>socialcircle - Home</title>
+</head>
+
+<body>
+
+<header th:replace="snippets.html :: headerSnippet"></header>
+<aside th:replace="snippets.html :: asideSnippet"></aside>
+
+<main id="main" class="main">
+    <!-- start Main-->
+    <section class="section">
+        <div class="row">
+            <div class="col-lg-12">
+                <!-- add review box start-->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Feed</h5> <!-- section header-->
+                        <section class="section">
+                            <div class="row">
+                                <div id="search-results-container-spinner" class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="col-lg-12" id="feed-container" style="display:none">
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+    </section>
+</main> <!-- End of Main-->
+
+<footer th:replace="snippets.html :: footerSnippet"></footer>
+<script th:src="@{/static/js/feed.js}"></script>
+
+</body>
+
+</html>

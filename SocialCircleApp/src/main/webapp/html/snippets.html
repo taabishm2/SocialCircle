@@ -1,0 +1,143 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+
+<metaContainer th:fragment="metaSnippet">
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <link rel="icon" type="image/x-icon" th:src="@{/static/img/favicon.png}">
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link th:href="@{/static/img/favicon.png}" rel="icon">
+    <link th:href="@{/static/img/apple-touch-icon.png}" rel="apple-touch-icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+          rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link th:href="@{/static/vendor/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/static/vendor/bootstrap-icons/bootstrap-icons.css}" rel="stylesheet">
+    <link th:href="@{/static/vendor/boxicons/css/boxicons.min.css}" rel="stylesheet">
+    <link th:href="@{/static/vendor/quill/quill.snow.css}" rel="stylesheet">
+    <link th:href="@{/static/vendor/quill/quill.bubble.css}" rel="stylesheet">
+    <link th:href="@{/static/vendor/remixicon/remixicon.css}" rel="stylesheet">
+    <link th:href="@{/static/vendor/simple-datatables/style.css}" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link th:href="@{/static/css/style.css}" rel="stylesheet">
+</metaContainer>
+
+<header id="header" class="header fixed-top d-flex align-items-center" th:fragment="headerSnippet">
+
+    <div class="d-flex align-items-center justify-content-between">
+        <a th:href="@{/}" class="logo d-flex align-items-center">
+            <img th:src="@{/static/img/logo.png}" alt="">
+            <span class="d-none d-lg-block">socialcircle</span>
+        </a>
+        <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div><!-- End Logo -->
+
+    <nav class="header-nav ms-auto">
+        <div style="padding-right:20px">
+            <span id="login-link-nav-holder" style="padding-right:20px"></span>
+        </div>
+
+        <div id="logged-in-nav-dropdown">
+            <ul class="d-flex align-items-center">
+
+                <li class="nav-item dropdown pe-3">
+
+                    <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+                        <img th:src="@{/static/img/profile-img.png}" alt="Profile" class="rounded-circle">
+                        <span class="d-none d-md-block dropdown-toggle ps-2" id="navbar-main-user-name"></span>
+                    </a><!-- End Profile Iamge Icon -->
+
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+                        <li class="dropdown-header">
+                            <h6 id="navbar-secondary-user-name"></h6>
+                            <span id="navbar-main-user-role"></span>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" th:href="@{/profile}">
+                                <i class="bi bi-person"></i>
+                                <span>My Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="#" id="logout-link">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Sign Out</span>
+                            </a>
+                        </li>
+
+                    </ul><!-- End Profile Dropdown Items -->
+                </li><!-- End Profile Nav -->
+
+            </ul>
+        </div>
+    </nav><!-- End Icons Navigation -->
+
+</header>
+
+<aside id="sidebar" class="sidebar" th:fragment="asideSnippet">
+
+    <ul class="sidebar-nav" id="sidebar-nav">
+
+        <li class="nav-heading">Pages</li>
+
+        <li class="nav-item">
+            <a class="nav-link collapsed" th:href="@{/}">
+                <i class="bi bi-grid"></i>
+                <span>Home</span>
+            </a>
+        </li><!-- End Profile Page Nav -->
+
+        <li class="nav-item">
+            <a class="nav-link collapsed" th:href="@{/contact}">
+                <i class="bi bi-card-list"></i>
+                <span>People</span>
+            </a>
+        </li><!-- End Register Page Nav -->
+
+    </ul>
+
+</aside>
+
+<div class="container" th:fragment="footerSnippet">
+    <div id="snackbar"></div>
+    <div id="errorSnackbar"></div>
+
+    <footer id="footer" class="footer">
+        <div class="copyright">
+            &copy; Copyright <strong><span>socialcircle</span></strong>. All Rights Reserved
+        </div>
+    </footer><!-- End Footer -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script th:src="@{/static/js/jquery-2.0.0.min.js}"></script>
+    <script th:src="@{/static/vendor/apexcharts/apexcharts.min.js}"></script>
+    <script th:src="@{/static/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/static/vendor/chart.js/chart.min.js}"></script>
+    <script th:src="@{/static/vendor/echarts/echarts.min.js}"></script>
+    <script th:src="@{/static/vendor/quill/quill.min.js}"></script>
+    <script th:src="@{/static/vendor/simple-datatables/simple-datatables.js}"></script>
+    <script th:src="@{/static/vendor/tinymce/tinymce.min.js}"></script>
+    <script th:src="@{/static/vendor/php-email-form/validate.js}"></script>
+    <script th:src="@{/static/js/main.js}"></script>
+</div>
+
+</html>

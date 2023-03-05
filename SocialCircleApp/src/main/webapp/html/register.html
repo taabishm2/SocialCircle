@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <metaSnippet th:replace="snippets.html :: metaSnippet"></metaSnippet>
+  <title>socialcircle - Register</title>
+</head>
+
+<body>
+
+  <main>
+    <div class="container">
+
+      <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
+              <div class="d-flex justify-content-center py-4">
+                <a href="index.html" class="logo d-flex align-items-center w-auto">
+                  <img th:src="@{/static/img/logo.png}" alt="">
+                  <span class="d-none d-lg-block">socialcircle</span>
+                </a>
+              </div><!-- End Logo -->
+
+              <div class="card mb-3">
+                <div class="card-body">
+                  <div class="pt-4 pb-2">
+                    <h5 class="card-title text-center pb-0 fs-4">Create an Account</h5>
+                    <p class="text-center small">Enter your personal details to create account</p>
+                  </div>
+
+                  <form class="row g-3 needs-validation" id="register-form">
+                    <div class="col-12">
+                      <label for="yourName" class="form-label">Your Name</label>
+                      <input type="text" name="name" class="form-control" id="yourName" required>
+                      <div class="invalid-feedback">Please, enter your name!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourEmail" class="form-label">Your Email</label>
+                      <input type="email" name="email" class="form-control" id="yourEmail" required>
+                      <div class="invalid-feedback">Please enter a valid Email address!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourPassword" class="form-label">Password</label>
+                      <input type="password" name="password" class="form-control" id="yourPassword" required>
+                      <div class="invalid-feedback">Please enter your password!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourCity" class="form-label">Your Current City</label>
+                      <input type="text" name="city" class="form-control" id="yourCity">
+                      <div class="invalid-feedback">Please, enter your city!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourCity" class="form-label">Personality Type</label>
+                      <input type="text" name="personalityType" class="form-control" id="personalityType">
+                      <div class="invalid-feedback">Please, enter your Myers–Briggs personality type!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourName" class="form-label">Your Phone</label>
+                      <input type="text" name="phone" class="form-control" id="phone">
+                      <div class="invalid-feedback">Please, enter your phone!</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourAttr1" class="form-label">Interest #1</label>
+                      <input type="text" name="attribute1" class="form-control" id="yourAttr1">
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourAttr2" class="form-label">Interest #2</label>
+                      <input type="text" name="attribute2" class="form-control" id="yourAttr2">
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourAttr3" class="form-label">Interest #3</label>
+                      <input type="text" name="attribute3" class="form-control" id="yourAttr3">
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourAttr4" class="form-label">Interest #4</label>
+                      <input type="text" name="attribute4" class="form-control" id="yourAttr4">
+                    </div>
+
+                    <div class="col-12">
+                      <label for="yourAttr5" class="form-label">Interest #5</label>
+                      <input type="text" name="attribute5" class="form-control" id="yourAttr5">
+                    </div>
+
+                    <div class="col-12">
+                      <button class="btn btn-primary w-100" type="submit">Create Account</button>
+                    </div>
+                    <div class="col-12">
+                      <p class="small mb-0">Already have an account? <a th:href="@{/login}">Log in</a></p>
+                    </div>
+                  </form>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main><!-- End #main -->
+
+  <footer th:replace="snippets.html :: footerSnippet"></footer>
+  <script th:src="@{/static/js/register.js}"></script>
+
+</body>
+
+</html>

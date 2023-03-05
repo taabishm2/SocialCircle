@@ -1,1 +1,1 @@
-# SocialCircle
+# SocialCircle App

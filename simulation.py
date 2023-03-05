@@ -36,10 +36,10 @@ class Simulation:
         self.time_to_check = 30
 
         in_dim = self.num_attributes + self.num_personalities
-        out_dims = [in_dim // 2, in_dim // 2]
+        out_dims = [in_dim // 2, in_dim // 2, in_dim // 3]
         self.matcher = MatchingModel(in_dim, out_dims)
         # exit()
-        self.lr = 0.01
+        self.lr = 0.001
         self.optimizer = torch.optim.Adam(self.matcher.parameters(), lr=self.lr)
 
         self.time = 0
@@ -50,7 +50,7 @@ class Simulation:
 
         self.tmp_loss_list = []
 
-        max_timesteps = 100
+        max_timesteps = 300
         for i in range(max_timesteps):
             print('timestep', i)
             print(self.num_users)
@@ -134,9 +134,6 @@ class Simulation:
 
             del self.con_to_start[user_tuple]
             del self.con_to_start[user_tuple_r]
-
-            del self.con_to_score[user_tuple]
-            del self.con_to_score[user_tuple_r]
 
         except KeyError as e: 
             pass

@@ -15,5 +15,5 @@ class MatchingModel(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, vec1, vec2):
-        return self.sigmoid(torch.sum(self.layers(vec1) * self.layers(vec2), dim=-1))
+        return self.sigmoid(torch.sum(self.sigmoid(self.layers(vec1)) * self.sigmoid(self.layers(vec2)), dim=-1))
         

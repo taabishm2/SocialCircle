@@ -3,17 +3,24 @@ console.log("formHandler.js was loaded...");
 $(function() {
     $(document).on("submit", "#connection-form", function(event) {
       event.preventDefault();
-      console.log("here");
-      console.log($(this).serializeArray());
+      addConnection($(this).serializeArray())
     });
 });
 
 $(function() {
     $('#connect-form').submit(function(event) {
       event.preventDefault();
-      //console.log($(this).serializeArray());
+      addConnect($(this).serializeArray())
     });
 });
+
+function addConnect(data) {
+
+    // TODO
+    console.log("not implemented yet");
+
+    return false;
+}
 
 
 function addConnection(data) {

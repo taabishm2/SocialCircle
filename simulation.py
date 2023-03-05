@@ -21,30 +21,33 @@ class Simulation:
 
         self.tag_mat = self.user_table[self.tag_colnames].to_numpy().astype(np.int32)
         self.pref_mat = self.user_table[self.pref_colnames].to_numpy()
-        self.bin_tag_mat = self.create_binary(self.tag_mat)
+        # self.pref_mat = self.normalize(self.pref_mat)
+        self.num_personalities = int(np.max(self.tag_mat[:, 0]))
+        self.bin_tag_mat = self.create_binary_tags()
+        self.bin_tag_mat_no_personality = self.bin_tag_mat[:, self.num_personalities:]
 
         self.graph_mat = np.zeros((self.num_users, self.num_users))
         self.curr_cons = set()
         self.con_to_start = {}
         self.con_to_pred = {}
         self.con_to_score = {}
-        self.dead_cons = set()
+        self.archive_cons = set()
         self.time_to_check = 30
 
-        self.matcher = MatchingModel(self.num_attributes)
+        self.matcher = MatchingModel(self.num_attributes + self.num_personalities)
         self.lr = 0.01
         self.optimizer = torch.optim.Adam(self.matcher.parameters(), lr=self.lr)
 
         self.time = 0
 
         self.last_req_time = np.zeros(self.num_users)
-        self.max_req_prob = 0.8
-        self.req_prob_stretch = 20
+        self.max_req_prob = 0.3
+        self.req_prob_stretch = 500
 
-        for i in range(100):
+        max_timesteps = 500
+        for i in range(max_timesteps):
             print('timestep', i)
             self.timestep()
-            # time.sleep(1)
 
 
     
@@ -55,6 +58,15 @@ class Simulation:
         x = self.time - self.last_req_time
         return self.max_req_prob \
                 - (1 / ((1 / self.req_prob_stretch) * x + np.sqrt(1 / self.max_req_prob)) ** 2)
+
+
+    def standardize(self, mat):
+        return (mat - np.mean(mat, axis=0, keepdims=True)) / np.std(mat, axis=0, keepdims=True)
+
+
+    def normalize(self, mat):
+        magnitudes = np.sqrt(np.sum(mat ** 2, axis=-1, keepdims=True))
+        return mat / magnitudes
 
 
     def interaction_func(self, score, con_time):
@@ -69,38 +81,53 @@ class Simulation:
 
 
     def try_add_known_connection(self, user1, user2):
+        if user1 == user2:
+            return False
+        
         user_tuple = (user1, user2)
         user_tuple_r = (user2, user1)
         # if they haven't connected in the past and aren't currently connected, connect them
-        if user_tuple not in self.curr_cons and user_tuple not in self.dead_cons:
+        if user_tuple not in self.curr_cons and user_tuple not in self.archive_cons:
             self.curr_cons.add(user_tuple) # add edge to known connections list
             self.curr_cons.add(user_tuple_r)
             
             self.con_to_start[user_tuple] = self.time # add start time for interaction function
             self.con_to_start[user_tuple_r] = self.time
 
-            score = np.dot(self.bin_tag_mat[user1], self.pref_mat[user2]) \
-              * np.dot(self.bin_tag_mat[user2], self.pref_mat[user1])
+            score = np.dot(self.bin_tag_mat_no_personality[user1], self.pref_mat[user2]) \
+              * np.dot(self.bin_tag_mat_no_personality[user2], self.pref_mat[user1])
             score = 1 / (1 + np.exp(score))
             
-            if score == 0:
-                # print(self.bin_tag_mat[user1])
-                # print(self.bin_tag_mat[user2])
-                print(user1, user2)
-                print(self.tag_mat[user1])
-                print(self.bin_tag_mat[user1])
-                exit()
             self.con_to_score[user_tuple] = score # add the score (invisible to predictive)
             self.con_to_score[user_tuple_r] = score
 
             # self.con_to_pred[user_tuple] = grad_pred # store the pred for loss calculation
             # self.con_to_pred[user_tuple_r] = grad_pred
             
-            print('added', user_tuple)
+            # print('added', user_tuple)
             return True
         
         return False
     
+
+    def archive_connection(self, user1, user2):
+        user_tuple = (user1, user2)
+        user_tuple_r = (user2, user1)
+
+        try:
+            # add edge to archived edges set
+            self.archive_cons.add(user_tuple)
+            self.archive_cons.add(user_tuple_r)
+
+            # remove edge from active connection datastructures
+            self.curr_cons.remove(user_tuple)
+            self.curr_cons.remove(user_tuple_r)
+
+            del self.con_to_start[user_tuple]
+            del self.con_to_start[user_tuple_r]
+        except KeyError as e: 
+            pass
+         
 
     def timestep(self):
         # runs the entire simulation for one timestep
@@ -120,7 +147,7 @@ class Simulation:
             for i in range(preds.shape[0]):
                 sort_perm = np.argsort(preds[i]) #sort the predictions
                 sort_perm = np.flip(sort_perm)
-                print(sort_perm)
+                # print(sort_perm[0])
                 user1 = user_idxs[i]
                 #look through the predicted scores largest to smallest
                 for user2 in sort_perm:
@@ -130,31 +157,8 @@ class Simulation:
         # for each of these users (again), if it has been x timesteps, check the interaction timeseries
         # and aggregate it into a single success metric (maybe avg # of interactions and their reviews)
         # and backprop through the matcher model
-        
-        for (user1, user2), start_time in self.con_to_start.items():
-            if self.time - start_time >= self.time_to_check:
-                # get avg interaction time series value
-                steps = np.arange(self.time - start_time)
-                steps[0] = steps[0] + 1e-4
-                interactions = self.interaction_func(
-                    self.con_to_score[(user1, user2)],
-                    steps
-                )
-
-                # plt.plot(steps, interactions)
-                # plt.title(f'score: {self.con_to_score[(user1, user2)]}')
-                # plt.show()
-                # plt.cla()
-                # plt.clf()
-
-                # look up prediction value and backprop
-                self.optimizer.zero_grad()
-                grad_pred = self.predict_match_with_grad(user1, user2)
-                loss = (
-                    grad_pred - torch.mean(torch.tensor(interactions, dtype=torch.float32))
-                ) ** 2
-                loss.backward()
-                
+        self.update_current_connections()
+            
         self.time += 1
 
 
@@ -164,8 +168,55 @@ class Simulation:
 
 
     def update_current_connections(self):
-        for idx1, idx2 in list(self.curr_cons):
-            self.update_edge(idx1, idx2, self.graph_mat[idx1, idx2] + 0.01)
+        users_to_archive = []
+
+        for (user1, user2), start_time in self.con_to_start.items():
+            new_edge_weight = self.interaction_func(
+                self.con_to_score[(user1, user2)],
+                max(self.time - start_time, 1e-4)
+            )
+            self.update_edge(user1, user2, new_edge_weight)
+            
+            if self.time - start_time >= self.time_to_check:
+                users_to_archive.append((user1, user2))
+        
+        # look up prediction value and backprop
+        if len(users_to_archive) > 0:
+            self.optimizer.zero_grad()
+            grad_pred = self.predict_match_with_grad(
+                [edge[0] for edge in users_to_archive],
+                [edge[1] for edge in users_to_archive]
+            )
+            interactions = [
+                self.interaction_func(
+                    self.con_to_score[(user1, user2)],
+                    np.arange(1, self.time - self.con_to_start[(user1, user2)] + 1, 1)
+                ) for user1, user2 in users_to_archive
+            ]
+            for ts, time_ser in enumerate(interactions):
+                plt.plot(
+                    np.arange(1, len(time_ser) + 1, 1),
+                    time_ser
+                )
+                plt.title(f'score: {self.con_to_score[(user1, user2)]}')
+                plt.savefig(f'fig/{self.time}_{ts}.png')
+
+            interactions = torch.tensor(interactions, dtype=torch.float32)
+            # print(torch.mean(interactions, dim=-1))
+            time.sleep(0.25)
+            # print('interactions shape', interactions.shape)
+            # print(grad_pred)
+            # print(interactions)
+            loss = torch.mean((grad_pred - torch.mean(interactions)) ** 2)
+            print(loss)
+            loss.backward()
+
+            for user1, user2 in users_to_archive:
+                self.archive_connection(user1, user2)
+
+
+
+
 
 
     def get_match_requests(self):
@@ -178,10 +229,11 @@ class Simulation:
 
 
 
-    def create_binary(self, tag_mat):
-        feature_mat = np.zeros((len(tag_mat), self.num_attributes))
-        for i in range(len(tag_mat)):
-            feature_mat[i][tag_mat[i]] = 1
+    def create_binary_tags(self):
+        feature_mat = np.zeros((len(self.tag_mat), self.num_attributes + self.num_personalities))
+        for i in range(len(self.tag_mat)):
+            feature_mat[i][self.tag_mat[i] + self.num_personalities] = 1
+            feature_mat[i][self.tag_mat[i, 0]] = 1
         return feature_mat
 
 
@@ -198,11 +250,12 @@ class Simulation:
         return cartprod
 
 
-    def predict_match_with_grad(self, user1, user2):
+    def predict_match_with_grad(self, user1_list, user2_list):
         pair_tensor = torch.tensor(
-            np.concatenate([self.bin_tag_mat[user1], self.bin_tag_mat[user2]]),
+            np.concatenate([self.bin_tag_mat[user1_list], self.bin_tag_mat[user2_list]], axis=-1),
             dtype=torch.float32
         )
+        print('grad predict input shape', pair_tensor.shape)
         pair_tensor = torch.unsqueeze(pair_tensor, dim=0)
         pred = self.matcher(pair_tensor)
         return pred

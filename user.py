@@ -28,4 +28,4 @@ def create_csv(num_user, num_att, num_per, num_tag, max_att, max_err):
     df.columns = cols
     df.to_csv('users.csv', index = False)
     
-create_csv(100, 20, 16, 5, 1, .1)
+create_csv(1000, 20, 16, 5, 1, .1)

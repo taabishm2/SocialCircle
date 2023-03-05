@@ -7,7 +7,9 @@ class MatchingModel(nn.Module):
         super().__init__()
 
         self.layers = nn.Sequential(*[
-            nn.Linear(num_attributes * 2, 1),
+            nn.Linear(num_attributes * 2, num_attributes // 4),
+            nn.ReLU(),
+            nn.Linear(num_attributes // 4, 1),
             nn.Sigmoid()
         ])
 
